@@ -22,13 +22,13 @@ class IntersectionInfo {
 class Engine {
   int canvasWidth;
   int canvasHeight;
-  int pixelWidth, pixelHeight;
+  double pixelWidth, pixelHeight;
   bool renderDiffuse, renderShadows, renderHighlights, renderReflections;
   int rayDepth;
   var canvas;
 
   Engine({this.canvasWidth : 100, this.canvasHeight : 100,
-          this.pixelWidth : 2, this.pixelHeight : 2,
+          this.pixelWidth : 2.0, this.pixelHeight : 2.0,
           this.renderDiffuse : false, this.renderShadows : false,
           this.renderHighlights : false, this.renderReflections : false,
           this.rayDepth : 2}) {

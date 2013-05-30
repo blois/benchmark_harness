@@ -78,7 +78,8 @@ void renderScene(event) {
   scene.lights.add(light);
   scene.lights.add(light1);
 
-  int imageWidth, imageHeight, pixelSize;
+  int imageWidth, imageHeight;
+  double pixelSize;
   bool renderDiffuse, renderShadows, renderHighlights, renderReflections;
   var canvas;
   if (event == null) {
@@ -93,7 +94,7 @@ void renderScene(event) {
   } else {
     imageWidth = int.parse(query('#imageWidth').value);
     imageHeight = int.parse(query('#imageHeight').value);
-    pixelSize = int.parse(query('#pixelSize').value.split(',')[0]);
+    pixelSize = double.parse(query('#pixelSize').value.split(',')[0]);
     renderDiffuse = query('#renderDiffuse').checked;
     renderShadows = query('#renderShadows').checked;
     renderHighlights = query('#renderHighlights').checked;
