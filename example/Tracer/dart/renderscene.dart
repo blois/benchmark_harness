@@ -17,7 +17,6 @@ class Light {
 class RenderParams {
   int imageWidth = 100;
   int imageHeight = 100;
-  int pixelSize = 5;
   bool renderDiffuse = true;
   bool renderShadows = true;
   bool renderHighlights = true;
@@ -29,7 +28,6 @@ class RenderParams {
   RenderParams.fromDocument() {
     imageWidth = int.parse(query('#imageWidth').value);
     imageHeight = int.parse(query('#imageHeight').value);
-    pixelSize = int.parse(query('#pixelSize').value.split(',')[0]);
     renderDiffuse = query('#renderDiffuse').checked;
     renderShadows = query('#renderShadows').checked;
     renderHighlights = query('#renderHighlights').checked;
@@ -45,13 +43,13 @@ void renderScene(RenderParams params) {
   scene.camera = new Camera(new Vector(0.0, 0.0, -15.0),
                             new Vector(-0.2, 0.0, 5.0),
                             new Vector(0.0, 1.0, 0.0));
-  scene.background = new Background(new Color(0.5, 0.5, 0.5), 0.4);
+  scene.background = new Background(Colors.create(0.5, 0.5, 0.5), 0.4);
 
   var sphere = new Sphere(
       new Vector(-1.5, 1.5, 2.0),
       1.5,
       new Solid(
-          new Color(0.0, 0.5, 0.5),
+          Colors.create(0.0, 0.5, 0.5),
           0.3,
           0.0,
           0.0,
@@ -63,7 +61,7 @@ void renderScene(RenderParams params) {
       new Vector(1.0, 0.25, 1.0),
       0.5,
       new Solid(
-          new Color(0.9,0.9,0.9),
+          Colors.create(0.9,0.9,0.9),
           0.1,
           0.0,
           0.0,
@@ -75,8 +73,8 @@ void renderScene(RenderParams params) {
       new Vector(0.1, 0.9, -0.5).normalize(),
       1.2,
       new Chessboard(
-          new Color(1.0, 1.0, 1.0),
-          new Color(0.0, 0.0, 0.0),
+          Colors.create(1.0, 1.0, 1.0),
+          Colors.create(0.0, 0.0, 0.0),
           0.2,
           0.0,
           1.0,
@@ -90,12 +88,12 @@ void renderScene(RenderParams params) {
 
   var light = new Light(
       new Vector(5.0, 10.0, -1.0),
-      new Color(0.8, 0.8, 0.8)
+      Colors.create(0.8, 0.8, 0.8)
   );
 
   var light1 = new Light(
       new Vector(-3.0, 5.0, -15.0),
-      new Color(0.8, 0.8, 0.8),
+      Colors.create(0.8, 0.8, 0.8),
       100.0
   );
 
@@ -106,8 +104,6 @@ void renderScene(RenderParams params) {
 
   var raytracer = new Engine(canvasWidth:params.imageWidth,
                              canvasHeight:params.imageHeight,
-                             pixelWidth: params.pixelSize,
-                             pixelHeight: params.pixelSize,
                              renderDiffuse: params.renderDiffuse,
                              renderShadows: params.renderShadows,
                              renderReflections: params.renderReflections,

@@ -44,7 +44,7 @@ class Camera {
 
 
 class Background {
-  final Color color;
+  final Float32List color;
   final double ambience;
 
   Background(this.color, this.ambience);
@@ -62,6 +62,6 @@ class Scene {
                         new Vector(0.0, 1.0, 0.0));
     shapes = new List();
     lights = new List();
-    background = new Background(new Color(0.0, 0.0, 0.5), 0.2);
+    background = new Background(Colors.create(0.0, 0.0, 0.5), 0.2);
   }
 }

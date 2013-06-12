@@ -10,7 +10,7 @@ class IntersectionInfo {
   var shape, position, normal, color, distance;
 
   IntersectionInfo() {
-    this.color = new Color(0.0, 0.0, 0.0);
+    this.color = Colors.create(0.0, 0.0, 0.0);
   }
 
   String toString() => 'Intersection [$position]';
@@ -20,27 +20,22 @@ class IntersectionInfo {
 class Engine {
   int canvasWidth;
   int canvasHeight;
-  int pixelWidth, pixelHeight;
   bool renderDiffuse, renderShadows, renderHighlights, renderReflections;
   int rayDepth;
-  CanvasRenderingContext2D context;
-  ImageData imageData;
-  List<int> pixels;
 
   Engine({this.canvasWidth : 100, this.canvasHeight : 100,
-          this.pixelWidth : 2, this.pixelHeight : 2,
           this.renderDiffuse : false, this.renderShadows : false,
           this.renderHighlights : false, this.renderReflections : false,
           this.rayDepth : 2}) {
-    canvasHeight = canvasHeight ~/ pixelHeight;
-    canvasWidth = canvasWidth ~/ pixelWidth;
   }
 
   // 'canvas' can be null if raytracer runs as benchmark
   void renderScene(Scene scene, canvas) {
     checkNumber = 0;
     /* Get canvas */
-    context = canvas == null ? null : canvas.getContext("2d");
+    var context = canvas == null ? null : canvas.getContext("2d");
+    var imageData;
+    var pixels;
 
     if (context != null) {
       context.fillStyle = 'black';
@@ -49,6 +44,7 @@ class Engine {
       pixels = imageData.data;
     } else {
       // TODO: testing.
+      pixels = new Uint8ClampedList(canvasWidth * canvasHeight * 4);
     }
 
     var canvasHeight = this.canvasHeight;
@@ -63,13 +59,13 @@ class Engine {
         var ray = scene.camera.getRay(xp, yp);
         var color = this.getPixelColor(ray, scene);
 
-        pixels[pixelIndex++] = (color.red * 255).toInt();
-        pixels[pixelIndex++] = (color.green * 255).toInt();
-        pixels[pixelIndex++] = (color.blue * 255).toInt();
+        pixels[pixelIndex++] = (color[0] * 255).toInt();
+        pixels[pixelIndex++] = (color[1] * 255).toInt();
+        pixels[pixelIndex++] = (color[2] * 255).toInt();
         pixelIndex++;
 
         if (canvas == null && x == y) {
-          checkNumber += color.brightness();
+          checkNumber += Colors.brightness(color);
         }
       }
     }
@@ -79,15 +75,14 @@ class Engine {
     }
 
     if (context != null) {
-      context.putImageData(this.imageData, 0, 0);
+      context.putImageData(imageData, 0, 0);
     }
   }
 
-  Color getPixelColor(Ray ray, Scene scene){
+  Float32List getPixelColor(Ray ray, Scene scene){
     var info = this.testIntersection(ray, scene, null);
     if(info != null){
-      var color = this.rayTrace(info, ray, scene, 0);
-      return color;
+      return this.rayTrace(info, ray, scene, 0);
     }
     return scene.background.color;
   }
@@ -118,10 +113,10 @@ class Engine {
     return new Ray(P, R1);
   }
 
-  Color rayTrace(IntersectionInfo info, Ray ray, Scene scene, int depth) {
+  Float32List rayTrace(IntersectionInfo info, Ray ray, Scene scene, int depth) {
     // Calc ambient
-    Color color = info.color.multiplyScalar(scene.background.ambience);
-    var oldColor = color;
+    var color = Colors.empty();
+    Colors.multiplyScalar(info.color, scene.background.ambience, color);
     var shininess = pow(10, info.shape.material.gloss + 1);
 
     for(var i = 0; i < scene.lights.length; i++) {
@@ -133,7 +128,10 @@ class Engine {
       if (this.renderDiffuse) {
         var L = v.dot(info.normal);
         if (L > 0.0) {
-          color = color + info.color * light.color.multiplyScalar(L);
+          var temp = Colors.empty();
+          Colors.multiplyScalar(light.color, L, temp);
+          Colors.multiply(info.color, temp, temp);
+          Colors.add(color, temp, color);
         }
       }
 
@@ -154,7 +152,7 @@ class Engine {
             reflColor = scene.background.color;
           }
 
-          color = color.blend(reflColor, info.shape.material.reflection);
+          Colors.blend(color, reflColor, info.shape.material.reflection, color);
         }
         // Refraction
         /* TODO */
@@ -170,9 +168,12 @@ class Engine {
         if (shadowInfo != null &&
             shadowInfo.shape != info.shape
             /*&& shadowInfo.shape.type != 'PLANE'*/) {
-          var vA = color.multiplyScalar(0.5);
+          var vA = Colors.empty();
+          Colors.multiplyScalar(color, 0.5, vA);
+
           var dB = (0.5 * pow(shadowInfo.shape.material.transparency, 0.5));
-          color = vA.addScalar(dB);
+
+          Colors.addScalar(vA, dB, color);
         }
       }
       // Phong specular highlights
@@ -186,10 +187,13 @@ class Engine {
         var H = (E - Lv).normalize();
 
         var glossWeight = pow(max(info.normal.dot(H), 0), shininess);
-        color = light.color.multiplyScalar(glossWeight) + color;
+
+        var temp = Colors.empty();
+        Colors.multiplyScalar(light.color, glossWeight, temp);
+        Colors.add(color, temp, color);
       }
     }
-    color.limit();
+    Colors.limit(color, color);
     return color;
   }
 

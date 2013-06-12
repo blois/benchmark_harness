@@ -15,7 +15,7 @@ abstract class Materials {
 
   Materials(this.reflection, this.transparency, this.gloss);
 
-  Color getColor(num u, num v);
+  Float32List getColor(num u, num v);
 
   wrapUp(t) {
     t = t % 2.0;
@@ -38,7 +38,7 @@ class Chessboard extends Materials {
     this.hasTexture = true;
   }
 
-  Color getColor(num u, num v) {
+  Float32List getColor(num u, num v) {
     var t = this.wrapUp(u * this.density) * this.wrapUp(v * this.density);
 
     if (t < 0.0) {
@@ -51,7 +51,7 @@ class Chessboard extends Materials {
 
 
 class Solid extends Materials {
-  var color;
+  Float32List color;
 
   Solid(this.color, reflection, refraction, transparency, gloss)
       : super(reflection, transparency, gloss) {

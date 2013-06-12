@@ -2,6 +2,7 @@ library ray_trace;
 
 import 'dart:html';
 import 'dart:math';
+import 'dart:typed_data';
 
 part 'color.dart';
 part 'engine.dart';
@@ -24,7 +25,7 @@ main() {
 }
 
 void render() {
-  var canvas = query('#canvas');
+  CanvasElement canvas = query('#canvas');
   var time = query('#time');
 
   canvas.width = int.parse(query('#imageWidth').value);
