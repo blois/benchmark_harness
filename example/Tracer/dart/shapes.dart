@@ -24,16 +24,14 @@ class Plane extends BaseShape {
   Plane(pos, this.d, material) : super(pos, material);
 
   IntersectionInfo intersect(Ray ray) {
-    var info = new IntersectionInfo();
-
     var Vd = this.position.dot(ray.direction);
-    if (Vd == 0) return info; // no intersection
+    if (Vd == 0) return null; // no intersection
 
     var t = -(this.position.dot(ray.position) + this.d) / Vd;
-    if (t <= 0) return info;
+    if (t <= 0) return null;
 
+    var info = new IntersectionInfo();
     info.shape = this;
-    info.isHit = true;
     info.position = ray.position + ray.direction.multiplyScalar(t);
     info.normal = this.position;
     info.distance = t;
@@ -62,9 +60,6 @@ class Sphere extends BaseShape {
   Sphere(pos, radius, material) : super(pos, material), this.radius = radius;
 
   IntersectionInfo intersect(Ray ray){
-    var info = new IntersectionInfo();
-    info.shape = this;
-
     var dst = ray.position - this.position;
 
     var B = dst.dot(ray.direction);
@@ -72,17 +67,19 @@ class Sphere extends BaseShape {
     var D = (B * B) - C;
 
     if (D > 0) { // intersection!
-      info.isHit = true;
+      var info = new IntersectionInfo();
+      info.shape = this;
       info.distance = (-B) - sqrt(D);
       info.position = ray.position +
           ray.direction.multiplyScalar(info.distance);
       info.normal = (info.position - this.position).normalize();
 
       info.color = this.material.getColor(0,0);
+
+      return info;
     } else {
-      info.isHit = false;
+      return null;
     }
-    return info;
   }
 
   String toString() {

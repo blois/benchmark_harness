@@ -7,8 +7,6 @@
 part of ray_trace;
 
 class IntersectionInfo {
-  bool isHit = false;
-  int hitCount = 0;
   var shape, position, normal, color, distance;
 
   IntersectionInfo() {
@@ -25,7 +23,9 @@ class Engine {
   int pixelWidth, pixelHeight;
   bool renderDiffuse, renderShadows, renderHighlights, renderReflections;
   int rayDepth;
-  var canvas;
+  CanvasRenderingContext2D context;
+  ImageData imageData;
+  List<int> pixels;
 
   Engine({this.canvasWidth : 100, this.canvasHeight : 100,
           this.pixelWidth : 2, this.pixelHeight : 2,
@@ -36,48 +36,56 @@ class Engine {
     canvasWidth = canvasWidth ~/ pixelWidth;
   }
 
-  void setPixel(int x, int y, Color color){
-    var pxW, pxH;
-    pxW = this.pixelWidth;
-    pxH = this.pixelHeight;
-
-    if (this.canvas != null) {
-      this.canvas.fillStyle = color.toString();
-      this.canvas.fillRect(x * pxW, y * pxH, pxW, pxH);
-    } else {
-      if (x == y) {
-        checkNumber += color.brightness();
-      }
-    }
-  }
-
   // 'canvas' can be null if raytracer runs as benchmark
   void renderScene(Scene scene, canvas) {
     checkNumber = 0;
     /* Get canvas */
-    this.canvas = canvas == null ? null : canvas.getContext("2d");
+    context = canvas == null ? null : canvas.getContext("2d");
+
+    if (context != null) {
+      context.fillStyle = 'black';
+      context.fillRect(0, 0, canvasWidth, canvasHeight);
+      imageData = context.getImageData(0, 0, canvasWidth, canvasHeight);
+      pixels = imageData.data;
+    } else {
+      // TODO: testing.
+    }
 
     var canvasHeight = this.canvasHeight;
     var canvasWidth = this.canvasWidth;
 
+    var pixelIndex = 0;
     for(var y = 0; y < canvasHeight; y++){
       for(var x = 0; x < canvasWidth; x++){
         var yp = y * 1.0 / canvasHeight * 2 - 1;
         var xp = x * 1.0 / canvasWidth * 2 - 1;
 
         var ray = scene.camera.getRay(xp, yp);
-        this.setPixel(x, y, this.getPixelColor(ray, scene));
+        var color = this.getPixelColor(ray, scene);
+
+        pixels[pixelIndex++] = (color.red * 255).toInt();
+        pixels[pixelIndex++] = (color.green * 255).toInt();
+        pixels[pixelIndex++] = (color.blue * 255).toInt();
+        pixelIndex++;
+
+        if (canvas == null && x == y) {
+          checkNumber += color.brightness();
+        }
       }
     }
     if ((canvas == null) && (checkNumber != 2321)) {
       // Used for benchmarking.
       throw "Scene rendered incorrectly";
     }
+
+    if (context != null) {
+      context.putImageData(this.imageData, 0, 0);
+    }
   }
 
   Color getPixelColor(Ray ray, Scene scene){
     var info = this.testIntersection(ray, scene, null);
-    if(info.isHit){
+    if(info != null){
       var color = this.rayTrace(info, ray, scene, 0);
       return color;
     }
@@ -86,23 +94,21 @@ class Engine {
 
   IntersectionInfo testIntersection(Ray ray, Scene scene, BaseShape exclude) {
     int hits = 0;
-    IntersectionInfo best = new IntersectionInfo();
-    best.distance = 2000;
+    IntersectionInfo best = null;
 
     for(var i=0; i < scene.shapes.length; i++){
       var shape = scene.shapes[i];
 
       if(shape != exclude){
-        IntersectionInfo info = shape.intersect(ray);
-        if (info.isHit &&
+        var info = shape.intersect(ray);
+        if (info != null &&
             (info.distance >= 0) &&
-            (info.distance < best.distance)){
+            (best == null || (info.distance < best.distance))) {
           best = info;
           hits++;
         }
       }
     }
-    best.hitCount = hits;
     return best;
   }
 
@@ -141,13 +147,14 @@ class Engine {
                                                     ray.direction);
           var refl = this.testIntersection(reflectionRay, scene, info.shape);
 
-          if (refl.isHit && refl.distance > 0){
-            refl.color = this.rayTrace(refl, reflectionRay, scene, depth + 1);
+          var reflColor;
+          if (refl != null && refl.distance > 0){
+            reflColor = this.rayTrace(refl, reflectionRay, scene, depth + 1);
           } else {
-            refl.color = scene.background.color;
+            reflColor = scene.background.color;
           }
 
-          color = color.blend(refl.color, info.shape.material.reflection);
+          color = color.blend(reflColor, info.shape.material.reflection);
         }
         // Refraction
         /* TODO */
@@ -160,7 +167,7 @@ class Engine {
         var shadowRay = new Ray(info.position, v);
 
         shadowInfo = this.testIntersection(shadowRay, scene, info.shape);
-        if (shadowInfo.isHit &&
+        if (shadowInfo != null &&
             shadowInfo.shape != info.shape
             /*&& shadowInfo.shape.type != 'PLANE'*/) {
           var vA = color.multiplyScalar(0.5);
@@ -170,7 +177,7 @@ class Engine {
       }
       // Phong specular highlights
       if (this.renderHighlights &&
-          !shadowInfo.isHit &&
+          shadowInfo == null &&
           (info.shape.material.gloss > 0)) {
         var Lv = (info.shape.position - light.position).normalize();
 

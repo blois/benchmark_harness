@@ -16,14 +16,21 @@ var checkNumber;
 
 main() {
   var button = query('#render');
+  button.onClick.listen((e) {
+    render();
+  });
+
+  render();
+}
+
+void render() {
   var canvas = query('#canvas');
   var time = query('#time');
-  button.onClick.listen((e) {
-    canvas.width = int.parse(query('#imageWidth').value);
-    canvas.height = int.parse(query('#imageHeight').value);
-    var sw = new Stopwatch()..start();
-    renderScene(e);
-    sw.stop();
-    time.text = sw.elapsedMilliseconds.toString();
-  });
+
+  canvas.width = int.parse(query('#imageWidth').value);
+  canvas.height = int.parse(query('#imageHeight').value);
+  var sw = new Stopwatch()..start();
+  renderScene(new RenderParams.fromDocument());
+  sw.stop();
+  time.text = sw.elapsedMilliseconds.toString();
 }

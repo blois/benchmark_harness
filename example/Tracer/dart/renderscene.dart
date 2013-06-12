@@ -14,9 +14,33 @@ class Light {
   Light(this.position, this.color, [this.intensity = 10.0]);
 }
 
+class RenderParams {
+  int imageWidth = 100;
+  int imageHeight = 100;
+  int pixelSize = 5;
+  bool renderDiffuse = true;
+  bool renderShadows = true;
+  bool renderHighlights = true;
+  bool renderReflections = true;
+  CanvasElement canvas = null;
+
+  RenderParams() {}
+
+  RenderParams.fromDocument() {
+    imageWidth = int.parse(query('#imageWidth').value);
+    imageHeight = int.parse(query('#imageHeight').value);
+    pixelSize = int.parse(query('#pixelSize').value.split(',')[0]);
+    renderDiffuse = query('#renderDiffuse').checked;
+    renderShadows = query('#renderShadows').checked;
+    renderHighlights = query('#renderHighlights').checked;
+    renderReflections = query('#renderReflections').checked;
+    canvas = query("#canvas");
+  }
+}
+
 
 // 'event' null means that we are benchmarking
-void renderScene(event) {
+void renderScene(RenderParams params) {
   var scene = new Scene();
   scene.camera = new Camera(new Vector(0.0, 0.0, -15.0),
                             new Vector(-0.2, 0.0, 5.0),
@@ -78,40 +102,18 @@ void renderScene(event) {
   scene.lights.add(light);
   scene.lights.add(light1);
 
-  int imageWidth, imageHeight, pixelSize;
-  bool renderDiffuse, renderShadows, renderHighlights, renderReflections;
-  var canvas;
-  if (event == null) {
-    imageWidth = 100;
-    imageHeight = 100;
-    pixelSize = 5;
-    renderDiffuse = true;
-    renderShadows = true;
-    renderHighlights = true;
-    renderReflections = true;
-    canvas = null;
-  } else {
-    imageWidth = int.parse(query('#imageWidth').value);
-    imageHeight = int.parse(query('#imageHeight').value);
-    pixelSize = int.parse(query('#pixelSize').value.split(',')[0]);
-    renderDiffuse = query('#renderDiffuse').checked;
-    renderShadows = query('#renderShadows').checked;
-    renderHighlights = query('#renderHighlights').checked;
-    renderReflections = query('#renderReflections').checked;
-    canvas = query("#canvas");
-  }
   int rayDepth = 2;
 
-  var raytracer = new Engine(canvasWidth:imageWidth,
-                             canvasHeight:imageHeight,
-                             pixelWidth: pixelSize,
-                             pixelHeight: pixelSize,
-                             renderDiffuse: renderDiffuse,
-                             renderShadows: renderShadows,
-                             renderReflections: renderReflections,
-                             renderHighlights: renderHighlights,
+  var raytracer = new Engine(canvasWidth:params.imageWidth,
+                             canvasHeight:params.imageHeight,
+                             pixelWidth: params.pixelSize,
+                             pixelHeight: params.pixelSize,
+                             renderDiffuse: params.renderDiffuse,
+                             renderShadows: params.renderShadows,
+                             renderReflections: params.renderReflections,
+                             renderHighlights: params.renderHighlights,
                              rayDepth: rayDepth
                              );
 
-  raytracer.renderScene(scene, canvas);
+  raytracer.renderScene(scene, params.canvas);
 }
