@@ -24,23 +24,26 @@ class Plane extends BaseShape {
   Plane(pos, this.d, material) : super(pos, material);
 
   IntersectionInfo intersect(Ray ray) {
-    var Vd = this.position.dot(ray.direction);
+    var Vd = Vectors.dot(this.position, ray.direction);
     if (Vd == 0) return null; // no intersection
 
-    var t = -(this.position.dot(ray.position) + this.d) / Vd;
+    var t = -(Vectors.dot(this.position, ray.position) + this.d) / Vd;
     if (t <= 0) return null;
 
     var info = new IntersectionInfo();
     info.shape = this;
-    info.position = ray.position + ray.direction.multiplyScalar(t);
+    info.position = Vectors.empty();
+    Vectors.multiplyScalar(ray.direction, t, info.position);
+    Vectors.add(ray.position, info.position, info.position);
     info.normal = this.position;
     info.distance = t;
 
     if(this.material.hasTexture){
-      var vU = new Vector(this.position.y, this.position.z, -this.position.x);
-      var vV = vU.cross(this.position);
-      var u = info.position.dot(vU);
-      var v = info.position.dot(vV);
+      var vU = Vectors.create(this.position[1], this.position[2], -this.position[0]);
+      var vV = Vectors.empty();
+      Vectors.cross(vU, this.position, vV);
+      var u = Vectors.dot(info.position, vU);
+      var v = Vectors.dot(info.position, vV);
       info.color = this.material.getColor(u,v);
     } else {
       info.color = this.material.getColor(0,0);
@@ -60,19 +63,24 @@ class Sphere extends BaseShape {
   Sphere(pos, radius, material) : super(pos, material), this.radius = radius;
 
   IntersectionInfo intersect(Ray ray){
-    var dst = ray.position - this.position;
+    var dst = Vectors.empty();
+    Vectors.sub(ray.position, this.position, dst);
 
-    var B = dst.dot(ray.direction);
-    var C = dst.dot(dst) - (this.radius * this.radius);
+    var B = Vectors.dot(dst, ray.direction);
+    var C = Vectors.dot(dst, dst) - (this.radius * this.radius);
     var D = (B * B) - C;
 
     if (D > 0) { // intersection!
       var info = new IntersectionInfo();
       info.shape = this;
       info.distance = (-B) - sqrt(D);
-      info.position = ray.position +
-          ray.direction.multiplyScalar(info.distance);
-      info.normal = (info.position - this.position).normalize();
+      info.position = Vectors.empty();
+      Vectors.multiplyScalar(ray.direction, info.distance, info.position);
+      Vectors.add(info.position, ray.position, info.position);
+
+      info.normal = Vectors.empty();
+      Vectors.sub(info.position, this.position, info.normal);
+      Vectors.normalize(info.normal, info.normal);
 
       info.color = this.material.getColor(0,0);
 

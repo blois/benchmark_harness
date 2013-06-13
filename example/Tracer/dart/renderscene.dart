@@ -40,13 +40,13 @@ class RenderParams {
 // 'event' null means that we are benchmarking
 void renderScene(RenderParams params) {
   var scene = new Scene();
-  scene.camera = new Camera(new Vector(0.0, 0.0, -15.0),
-                            new Vector(-0.2, 0.0, 5.0),
-                            new Vector(0.0, 1.0, 0.0));
+  scene.camera = new Camera(Vectors.create(0.0, 0.0, -15.0),
+                            Vectors.create(-0.2, 0.0, 5.0),
+                            Vectors.create(0.0, 1.0, 0.0));
   scene.background = new Background(Colors.create(0.5, 0.5, 0.5), 0.4);
 
   var sphere = new Sphere(
-      new Vector(-1.5, 1.5, 2.0),
+      Vectors.create(-1.5, 1.5, 2.0),
       1.5,
       new Solid(
           Colors.create(0.0, 0.5, 0.5),
@@ -58,7 +58,7 @@ void renderScene(RenderParams params) {
   );
 
   var sphere1 = new Sphere(
-      new Vector(1.0, 0.25, 1.0),
+      Vectors.create(1.0, 0.25, 1.0),
       0.5,
       new Solid(
           Colors.create(0.9,0.9,0.9),
@@ -69,8 +69,11 @@ void renderScene(RenderParams params) {
       )
   );
 
+  var planePos = Vectors.create(0.1, 0.9, -0.5);
+  Vectors.normalize(planePos, planePos);
+
   var plane = new Plane(
-      new Vector(0.1, 0.9, -0.5).normalize(),
+      planePos,
       1.2,
       new Chessboard(
           Colors.create(1.0, 1.0, 1.0),
@@ -87,12 +90,12 @@ void renderScene(RenderParams params) {
   scene.shapes.add(sphere1);
 
   var light = new Light(
-      new Vector(5.0, 10.0, -1.0),
+      Vectors.create(5.0, 10.0, -1.0),
       Colors.create(0.8, 0.8, 0.8)
   );
 
   var light1 = new Light(
-      new Vector(-3.0, 5.0, -15.0),
+      Vectors.create(-3.0, 5.0, -15.0),
       Colors.create(0.8, 0.8, 0.8),
       100.0
   );

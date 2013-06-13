@@ -6,52 +6,61 @@
 // Ported from the v8 benchmark suite by Google 2012.
 part of ray_trace;
 
-class Vector {
-  double x, y, z;
-  Vector(this.x, this.y, this.z);
-
-  void copy(Vector v) {
-    this.x = v.x;
-    this.y = v.y;
-    this.z = v.z;
+class Vectors {
+  static Float32List empty() {
+    return new Float32List(3);
   }
 
-  Vector normalize() {
-    var m = this.magnitude();
-    return new Vector(this.x / m, this.y / m, this.z / m);
+  static Float32List create(double x, double y, double z) {
+    var list = new Float32List(3);
+    list[0] = x;
+    list[1] = y;
+    list[2] = z;
+    return list;
   }
 
-  double magnitude() {
-    return sqrt((this.x * this.x) + (this.y * this.y) + (this.z * this.z));
+  static void normalize(Float32List a, Float32List dest) {
+    var m = magnitude(a);
+    dest[0] = a[0] / m;
+    dest[1] = a[1] / m;
+    dest[2] = a[2] / m;
   }
 
-  Vector cross(Vector w) {
-    return new Vector(-this.z * w.y + this.y * w.z,
-                      this.z * w.x - this.x * w.z,
-                      -this.y * w.x + this.x * w.y);
+  static double magnitude(Float32List a) {
+    return sqrt((a[0] * a[0]) + (a[1] * a[1]) + (a[2] * a[2]));
   }
 
-  double dot(Vector w) {
-    return this.x * w.x + this.y * w.y + this.z * w.z;
+  static void cross(Float32List a, Float32List b, Float32List dest) {
+    dest[0] = -a[2] * b[1] + a[1] * b[2];
+    dest[1] = a[2] * b[0] - a[0] * b[2];
+    dest[2] = -a[1] * b[0] + a[0] * b[1];
   }
 
-  Vector operator +(Vector w) {
-    return new Vector(w.x + x, w.y + y, w.z + z);
+  static double dot(Float32List a, Float32List b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
   }
 
-  Vector operator -(Vector w) {
-    return new Vector(x - w.x, y - w.y, z - w.z);
+  static void add(Float32List a, Float32List b, Float32List dest) {
+    dest[0] = a[0] + b[0];
+    dest[1] = a[1] + b[1];
+    dest[2] = a[2] + b[2];
   }
 
-  Vector operator *(Vector w) {
-    return new Vector(x * w.x, y * w.y, z * w.z);
+  static void sub(Float32List a, Float32List b, Float32List dest) {
+    dest[0] = a[0] - b[0];
+    dest[1] = a[1] - b[1];
+    dest[2] = a[2] - b[2];
   }
 
-  Vector multiplyScalar(double w) {
-    return new Vector(x * w, y * w, z * w);
+  static void mul(Float32List a, Float32List b, Float32List dest) {
+    dest[0] = a[0] * b[0];
+    dest[1] = a[1] * b[1];
+    dest[2] = a[2] * b[2];
   }
 
-  String toString() {
-    return 'Vector [$x, $y ,$z ]';
+  static void multiplyScalar(Float32List a, double w, Float32List dest) {
+    dest[0] = a[0] * w;
+    dest[1] = a[1] * w;
+    dest[2] = a[2] * w;
   }
 }

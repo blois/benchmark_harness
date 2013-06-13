@@ -24,16 +24,31 @@ class Camera {
   var equator, screen;
 
   Camera(this.position, this.lookAt, this.up) {
-    this.equator = lookAt.normalize().cross(this.up);
-    this.screen = this.position + this.lookAt;
+    this.equator = Vectors.empty();
+    var temp = Vectors.empty();
+    Vectors.normalize(lookAt, temp);
+    Vectors.cross(temp, this.up, this.equator);
+
+    this.screen = Vectors.empty();
+    Vectors.add(this.position, this.lookAt, this.screen);
   }
 
   Ray getRay(double vx, double vy) {
-    var pos = screen -
-        (this.equator.multiplyScalar(vx) - this.up.multiplyScalar(vy));
-    pos.y = pos.y * -1.0;
-    var dir = pos - this.position;
-    var ray = new Ray(pos, dir.normalize());
+    var pos = Vectors.empty();
+    Vectors.multiplyScalar(this.equator, vx, pos);
+
+    var temp = Vectors.empty();
+    Vectors.multiplyScalar(this.up, vy, temp);
+
+    Vectors.sub(pos, temp, pos);
+    Vectors.sub(screen, pos, pos);
+
+    pos[1] = pos[1] * -1.0;
+
+    var dir = Vectors.empty();
+    Vectors.sub(pos, this.position, dir);
+    Vectors.normalize(dir, dir);
+    var ray = new Ray(pos, dir);
     return ray;
   }
 
@@ -57,9 +72,9 @@ class Scene {
   var lights;
   var background;
   Scene() {
-    camera = new Camera(new Vector(0.0, 0.0, -0.5),
-                        new Vector(0.0, 0.0, 1.0),
-                        new Vector(0.0, 1.0, 0.0));
+    camera = new Camera(Vectors.create(0.0, 0.0, -0.5),
+                        Vectors.create(0.0, 0.0, 1.0),
+                        Vectors.create(0.0, 1.0, 0.0));
     shapes = new List();
     lights = new List();
     background = new Background(Colors.create(0.0, 0.0, 0.5), 0.2);
