@@ -58,9 +58,9 @@ class Engine {
         var ray = scene.camera.getRay(xp, yp);
         var color = this.getPixelColor(ray, scene);
 
-        pixels[pixelIndex++] = (color[0] * 255).toInt();
-        pixels[pixelIndex++] = (color[1] * 255).toInt();
-        pixels[pixelIndex++] = (color[2] * 255).toInt();
+        pixels[pixelIndex++] = (color.x * 255).toInt();
+        pixels[pixelIndex++] = (color.y * 255).toInt();
+        pixels[pixelIndex++] = (color.z * 255).toInt();
         pixelIndex++;
 
         if (canvas == null && x == y) {
@@ -78,7 +78,7 @@ class Engine {
     }
   }
 
-  Float32List getPixelColor(Ray ray, Scene scene){
+  Float32x4 getPixelColor(Ray ray, Scene scene){
     var info = this.testIntersection(ray, scene, null);
     if(info != null){
       return this.rayTrace(info, ray, scene, 0);
@@ -106,35 +106,27 @@ class Engine {
     return best;
   }
 
-  Ray getReflectionRay(Float32List P, Float32List N, Float32List V){
+  Ray getReflectionRay(Float32x4 P, Float32x4 N, Float32x4 V){
     var c1 = -Vectors.dot(N, V);
-    var R1 = Vectors.empty();
-    Vectors.multiplyScalar(N, 2 * c1, R1);
-    Vectors.add(V, R1, R1);
+    var R1 = N.scale(2 * c1) + V;
     return new Ray(P, R1);
   }
 
-  Float32List rayTrace(IntersectionInfo info, Ray ray, Scene scene, int depth) {
+  Float32x4 rayTrace(IntersectionInfo info, Ray ray, Scene scene, int depth) {
     // Calc ambient
-    var color = Colors.empty();
-    Colors.multiplyScalar(info.color, scene.background.ambience, color);
+    var color = info.color.scale(scene.background.ambience);
     var shininess = pow(10, info.shape.material.gloss + 1.0);
 
     for(var i = 0; i < scene.lights.length; i++) {
       var light = scene.lights[i];
 
       // Calc diffuse lighting
-      var v = Vectors.empty();
-      Vectors.sub(light.position, info.position, v);
-      Vectors.normalize(v, v);
+      var v = Vectors.normalize(light.position - info.position);
 
       if (this.renderDiffuse) {
         var L = Vectors.dot(v, info.normal);
         if (L > 0.0) {
-          var temp = Colors.empty();
-          Colors.multiplyScalar(light.color, L, temp);
-          Colors.multiply(info.color, temp, temp);
-          Colors.add(color, temp, color);
+          color = color + info.color * light.color.scale(L);
         }
       }
 
@@ -155,7 +147,7 @@ class Engine {
             reflColor = scene.background.color;
           }
 
-          Colors.blend(color, reflColor, info.shape.material.reflection, color);
+          color = Colors.blend(color, reflColor, info.shape.material.reflection);
         }
         // Refraction
         /* TODO */
@@ -171,12 +163,11 @@ class Engine {
         if (shadowInfo != null &&
             shadowInfo.shape != info.shape
             /*&& shadowInfo.shape.type != 'PLANE'*/) {
-          var vA = Colors.empty();
-          Colors.multiplyScalar(color, 0.5, vA);
+          var vA = color.scale(0.5);
 
           var dB = (0.5 * pow(shadowInfo.shape.material.transparency, 0.5));
 
-          Colors.addScalar(vA, dB, color);
+          color = Colors.addScalar(vA, dB);
         }
       }
       // Phong specular highlights
@@ -184,25 +175,17 @@ class Engine {
           shadowInfo == null &&
           (info.shape.material.gloss > 0)) {
 
-        var Lv = Vectors.empty();
-        Vectors.sub(info.shape.position, light.position, Lv);
-        Vectors.normalize(Lv, Lv);
+        var Lv = Vectors.normalize(info.shape.position - light.position);
 
-        var E = Vectors.empty();
-        Vectors.sub(scene.camera.position, info.shape.position, E);
-        Vectors.normalize(E, E);
+        var E = Vectors.normalize(scene.camera.position - info.shape.position);
 
-        Vectors.sub(E, Lv, E);
-        Vectors.normalize(E, E);
+        var H = Vectors.normalize(E - Lv);
 
-        var glossWeight = pow(max(Vectors.dot(info.normal, E), 0), shininess);
-
-        var temp = Colors.empty();
-        Colors.multiplyScalar(light.color, glossWeight, temp);
-        Colors.add(color, temp, color);
+        var glossWeight = pow(max(Vectors.dot(info.normal, H), 0), shininess);
+        color = light.color.scale(glossWeight) + color;
       }
     }
-    Colors.limit(color, color);
+    color = Colors.limit(color);
     return color;
   }
 

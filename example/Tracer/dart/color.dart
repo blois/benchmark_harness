@@ -7,59 +7,29 @@
 part of ray_trace;
 
 class Colors {
-  static Float32List empty() {
-    return new Float32List(3);
+  static final Float32x4 _lowerLimits = new Float32x4.splat(0.0);
+  static final Float32x4 _upperLimits = new Float32x4.splat(1.0);
+
+  static Float32x4 create(double r, double g, double b) {
+    return new Float32x4(r, g, b, 0.0);
   }
 
-  static Float32List create(double r, double g, double b) {
-    var list = new Float32List(3);
-    list[0] = r;
-    list[1] = g;
-    list[2] = b;
-
-    return list;
+  static Float32x4 limit(Float32x4 a) {
+    return a.clamp(_lowerLimits, _upperLimits);
   }
 
-  static void limit(Float32List a, Float32List dest) {
-    dest[0] = a[0].clamp(0.0, 1.0);
-    dest[1] = a[1].clamp(0.0, 1.0);
-    dest[2] = a[2].clamp(0.0, 1.0);
+  static Float32x4 addScalar(Float32x4 a, double s) {
+    return limit(a + new Float32x4.splat(s));
   }
 
-  static void add(Float32List a, Float32List b, Float32List dest) {
-    dest[0] = a[0] + b[0];
-    dest[1] = a[1] + b[1];
-    dest[2] = a[2] + b[2];
-  }
-
-  static void addScalar(Float32List a, double s, Float32List dest) {
-    dest[0] = (a[0] + s).clamp(0.0, 1.0);
-    dest[1] = (a[1] + s).clamp(0.0, 1.0);
-    dest[2] = (a[2] + s).clamp(0.0, 1.0);
-  }
-
-  static void multiply(Float32List a, Float32List b, Float32List dest) {
-    dest[0] = a[0] * b[0];
-    dest[1] = a[1] * b[1];
-    dest[2] = a[2] * b[2];
-  }
-
-  static void multiplyScalar(Float32List a, double f, Float32List dest) {
-    dest[0] = a[0] * f;
-    dest[1] = a[1] * f;
-    dest[2] = a[2] * f;
-  }
-
-  static void blend(Float32List a, Float32List b, double w, Float32List dest) {
-    dest[0] = (1.0 - w) * a[0] + w * b[0];
-    dest[1] = (1.0 - w) * a[1] + w * b[1];
-    dest[2] = (1.0 - w) * a[2] + w * b[2];
+  static Float32x4 blend(Float32List a, Float32List b, double w) {
+    return a.scale(1.0 - w) + b.scale(w);
   }
 
   static int brightness(Float32List a) {
-    var r = (a[0] * 255).toInt();
-    var g = (a[1] * 255).toInt();
-    var b = (a[2] * 255).toInt();
+    var r = (a.x * 255).toInt();
+    var g = (a.y * 255).toInt();
+    var b = (a.z * 255).toInt();
     return (r * 77 + g * 150 + b * 29) >> 8;
   }
 }

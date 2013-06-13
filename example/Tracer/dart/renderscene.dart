@@ -69,8 +69,7 @@ void renderScene(RenderParams params) {
       )
   );
 
-  var planePos = Vectors.create(0.1, 0.9, -0.5);
-  Vectors.normalize(planePos, planePos);
+  var planePos = Vectors.normalize(Vectors.create(0.1, 0.9, -0.5));
 
   var plane = new Plane(
       planePos,

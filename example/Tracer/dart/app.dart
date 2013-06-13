@@ -15,7 +15,7 @@ part 'renderscene.dart';
 // used to check if raytrace was correct (used by benchmarks)
 var checkNumber;
 
-main() {
+main() { 
   var button = query('#render');
   button.onClick.listen((e) {
     render();

@@ -32,16 +32,13 @@ class Plane extends BaseShape {
 
     var info = new IntersectionInfo();
     info.shape = this;
-    info.position = Vectors.empty();
-    Vectors.multiplyScalar(ray.direction, t, info.position);
-    Vectors.add(ray.position, info.position, info.position);
+    info.position = ray.position + ray.direction.scale(t);
     info.normal = this.position;
     info.distance = t;
 
     if(this.material.hasTexture){
-      var vU = Vectors.create(this.position[1], this.position[2], -this.position[0]);
-      var vV = Vectors.empty();
-      Vectors.cross(vU, this.position, vV);
+      var vU = Vectors.create(this.position.y, this.position.z, -this.position.x);
+      var vV = Vectors.cross(vU, this.position);
       var u = Vectors.dot(info.position, vU);
       var v = Vectors.dot(info.position, vV);
       info.color = this.material.getColor(u,v);
@@ -63,8 +60,7 @@ class Sphere extends BaseShape {
   Sphere(pos, radius, material) : super(pos, material), this.radius = radius;
 
   IntersectionInfo intersect(Ray ray){
-    var dst = Vectors.empty();
-    Vectors.sub(ray.position, this.position, dst);
+    var dst = ray.position - this.position;
 
     var B = Vectors.dot(dst, ray.direction);
     var C = Vectors.dot(dst, dst) - (this.radius * this.radius);
@@ -74,13 +70,9 @@ class Sphere extends BaseShape {
       var info = new IntersectionInfo();
       info.shape = this;
       info.distance = (-B) - sqrt(D);
-      info.position = Vectors.empty();
-      Vectors.multiplyScalar(ray.direction, info.distance, info.position);
-      Vectors.add(info.position, ray.position, info.position);
-
-      info.normal = Vectors.empty();
-      Vectors.sub(info.position, this.position, info.normal);
-      Vectors.normalize(info.normal, info.normal);
+      info.position = ray.position +
+          ray.direction.scale(info.distance);
+      info.normal = Vectors.normalize(info.position - this.position);
 
       info.color = this.material.getColor(0,0);
 
